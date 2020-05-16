@@ -1,0 +1,15 @@
+./qtest -f traces/trace-01-ops.cmd
+./qtest -f traces/trace-02-ops.cmd
+./qtest -f traces/trace-03-ops.cmd
+./qtest -f traces/trace-04-ops.cmd
+./qtest -f traces/trace-05-ops.cmd
+./qtest -f traces/trace-06-string.cmd
+./qtest -f traces/trace-07-robust.cmd
+./qtest -f traces/trace-08-robust.cmd
+./qtest -f traces/trace-09-robust.cmd
+./qtest -f traces/trace-10-malloc.cmd
+./qtest -f traces/trace-11-malloc.cmd
+./qtest -f traces/trace-12-malloc.cmd
+./qtest -f traces/trace-13-perf.cmd
+./qtest -f traces/trace-14-perf.cmd
+./qtest -f traces/trace-15-perf.cmd
