@@ -1,7 +1,7 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
+ * <Name: lijianjian + source: https://zhuanlan.zhihu.com/p/59534845>
  * 
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
@@ -132,7 +132,6 @@ NOTES:
  *      the correct answers.
  */
 
-
 #endif
 //1
 /* 
@@ -143,7 +142,8 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+    /* Given: x^y = (x|y) & ~(x&y) */
+    return ~(~x & ~y) & ~(x & y);
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -152,9 +152,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-
-  return 2;
-
+    return 1 << 31;
 }
 //2
 /*
@@ -165,7 +163,17 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+    /* To judge if x is 0x7fffffff */
+    /* In C, '!' turn all nonzero number to zero and turn 1 to 0. */
+
+    int y = x + 1;  // y is Tmin if x is Tmax
+    x = x + y;      // x is now -1(0xffffffff)
+    x = ~x;         // x is now 0 if original x is Tmax
+
+    //exclude x is -1(0xffffffff)
+    y = !y;
+    x = x + y;
+    return !x;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +184,12 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+    // mask: 0xAAAAAAAA
+    int mask = 0xAA;
+    mask = (mask << 8) + mask;
+    mask = (mask << 16) + mask;
+    // mask & x can turn the even-numbered bits to 0.
+    return !((mask & x) ^ mask);
 }
 /* 
  * negate - return -x 
@@ -186,7 +199,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+    return ~x + 1;
 }
 //3
 /* 
@@ -199,7 +212,12 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+    int sign = 1 << 31;
+    int upperBound = ~(sign | 0x39);
+    int lowerBound = ~0x30;
+    upperBound = sign & (upperBound + x) >> 31;
+    lowerBound = sign & (lowerBound + 1 + x) >> 31;
+    return !(upperBound | lowerBound);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -209,7 +227,10 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+    x = !!x;
+    x = ~x + 1;
+    // now x is 0 if original x is 0, x is -1 if original x is not 0
+    return (x & y) | (~x & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -219,7 +240,16 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+    int negX = ~x + 1;               //-x
+    int addX = negX + y;             //y-x
+    int checkSign = addX >> 31 & 1;  //y-x的符号
+    int leftBit = 1 << 31;           //最大位为1的32位有符号数
+    int xLeft = x & leftBit;         //x的符号
+    int yLeft = y & leftBit;         //y的符号
+    int bitXor = xLeft ^ yLeft;      //x和y符号相同标志位，相同为0不同为1
+    bitXor = (bitXor >> 31) & 1;     //符号相同标志位格式化为0或1
+    //返回1有两种情况：符号相同标志位为0（相同）位与 y-x 的符号为0（y-x>=0）结果为1；符号相同标志位为1（不同）位与x的符号位为1（x<0）
+    return ((!bitXor) & (!checkSign)) | (bitXor & (xLeft >> 31));
 }
 //4
 /* 
@@ -231,7 +261,8 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+    /* A negative number right shift 31 bits must be -1 */
+    return ((x | (~x + 1)) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -246,8 +277,29 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+    /* A positive number has bits we count from right to left until we meet 0 */
+    // 12(01100), the result is 5
+    /* A negative number has bits we count from right to left until we meet 1 */
+    // -5(1011), the result is 4
+
+    int b16, b8, b4, b2, b1, b0;
+    int sign = x >> 31;
+    // if x is negative, we flip it
+    x = (sign & ~x) | (~sign & x);
+    b16 = !!(x >> 16) << 4;  //高十六位是否有1
+    x = x >> b16;            //如果有（至少需要16位），则将原数右移16位
+    b8 = !!(x >> 8) << 3;    //剩余位高8位是否有1
+    x = x >> b8;             //如果有（至少需要16+8=24位），则右移8位
+    b4 = !!(x >> 4) << 2;    //同理
+    x = x >> b4;
+    b2 = !!(x >> 2) << 1;
+    x = x >> b2;
+    b1 = !!(x >> 1);
+    x = x >> b1;
+    b0 = x;
+    return b16 + b8 + b4 + b2 + b1 + b0 + 1;  //+1表示加上符号位
 }
+
 //float
 /* 
  * floatScale2 - Return bit-level equivalent of expression 2*f for
@@ -261,7 +313,19 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+    int exp = (uf & 0x7f800000) >> 23;  //0x7f800000 means all exp bits are 1
+    int sign = uf & (1 << 31);          //sign is either 0 or 0x80000000
+    if (exp == 0) {
+        return uf << 1 | sign;
+    }
+    if (exp == 255) {
+        return uf;  //inf or NaN
+    }
+    exp++;
+    if (exp == 255) {
+        return 0x7f800000 | sign;  //inf
+    }
+    return (exp << 23) | (uf & 0x807fffff);  //0x807fffff means all bits are 1 except exp bits
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -276,7 +340,21 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+    int exp = ((uf & 0x7f800000) >> 23) - 127;
+    int frac = (uf & 0x007fffff) | 0x00800000;  //frac = 1.f << 23
+    int sign = (uf & 0x80000000);
+    if (exp < 0)  //the floating is less than 1 => 0(int) (underflow)
+        return 0;
+    if (exp >= 31)  //overflow
+        return 0x80000000u;
+    if (exp <= 23)
+        frac >>= (23 - exp);
+    else
+        frac <<= (exp - 23);
+    if (!sign)
+        return frac;
+    else
+        return ~frac + 1;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -292,5 +370,9 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    int bias = 127;
+    if (x < -150) return 0;
+    if (x > 127) return 0xff << 23;
+    if (x < -127) return 0x1 << (150 - x);
+    return (x + bias) << 23;
 }
