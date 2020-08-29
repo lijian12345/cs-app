@@ -1,3 +1,4 @@
+# sudo apt install clang llvm
 CC = clang
 CFLAGS = -O0 -g -Wall -Werror
 
